@@ -2,6 +2,12 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useField } from '@unform/core';
 import { useIMask } from 'react-imask';
 
+import { useCreditCardInfo } from '../../../hooks/useCreditCardInfo';
+
+import * as S from './styles';
+
+import Warning from '../../../assets/warning.svg';
+
 interface Props {
     name: string;
     label?: string;
@@ -31,6 +37,16 @@ export default function InputMask({ name, label, mask, ...rest }: InputProps) {
         error,
     } = useField(name);
 
+    const { setCardName, setCardNumber, setCardValidity, setCardCvv } =
+        useCreditCardInfo();
+
+    React.useEffect(() => {
+        if (name == 'cardName') setCardName(value);
+        if (name == 'cardNumber') setCardNumber(unmaskedValue);
+        if (name == 'cardDate') setCardValidity(unmaskedValue);
+        if (name == 'cardCvv') setCardCvv(value);
+    }, [value]);
+
     useEffect(() => {
         registerField({
             name: fieldName,
@@ -39,6 +55,7 @@ export default function InputMask({ name, label, mask, ...rest }: InputProps) {
                 return ref.current.unmaskedValue;
             },
             setValue: (ref, value) => {
+                console.log(value);
                 ref.current.value = value;
             },
             clearValue: ref => {
@@ -54,7 +71,7 @@ export default function InputMask({ name, label, mask, ...rest }: InputProps) {
     }, [mask, setOpts]);
 
     return (
-        <>
+        <S.Container isErrored={!!error}>
             {label && <label htmlFor={fieldName}>{label}</label>}
 
             <input
@@ -64,7 +81,12 @@ export default function InputMask({ name, label, mask, ...rest }: InputProps) {
                 {...rest}
             />
 
-            {error && <span>{error}</span>}
-        </>
+            {error && (
+                <div>
+                    <img src={Warning} alt="Shield" />
+                    <span>{error}</span>
+                </div>
+            )}
+        </S.Container>
     );
 }

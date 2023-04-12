@@ -1,20 +1,57 @@
 import React from 'react';
 import { Form } from '@unform/web';
 import { FormHandles, SubmitHandler } from '@unform/core';
-import InputMask from '../../components/form/inputMask';
+import InputMask from '../../components/Form/InputMask';
 
 //? Images
 import Shield from '../../assets/shield.svg';
-import Contactless from '../../assets/ContactlessPayment.svg';
-import VisaFlag from '../../assets/flag/Visa.svg';
 
 //? Styles
 import * as S from './styles';
 
-const CardPayment: React.FC = () => {
+//? Hooks
+import { useCreditCardInfo } from '../../hooks/useCreditCardInfo';
+import CreditCard from '../../components/CreditCard';
+
+const AddCard: React.FC = () => {
     const formRef = React.useRef<FormHandles>(null);
+    const { cardName, cardNumber, cardValidity, cardCvv } = useCreditCardInfo();
+
+    const [showBack, setShowBack] = React.useState(false);
 
     const handleSubmit: SubmitHandler<FormData> = data => {
+        formRef.current?.setErrors({});
+        let Errors: any = {};
+
+        if (formRef.current?.getFieldValue('cardNumber').length < 16) {
+            Errors = {
+                ...Errors,
+                cardNumber: 'Insira um número de cartão válido',
+            };
+        }
+
+        if (formRef.current?.getFieldValue('cardName').length < 3) {
+            Errors = { ...Errors, cardName: 'Insira um nome válido' };
+        }
+
+        if (formRef.current?.getFieldValue('cardDate').length < 4) {
+            Errors = { ...Errors, cardDate: 'Insira uma data válida' };
+        }
+
+        if (formRef.current?.getFieldValue('cardCvv').length < 3) {
+            Errors = { ...Errors, cardCvv: 'CVV inválido' };
+        }
+
+        if (
+            Errors.cardNumber ||
+            Errors.cardName ||
+            Errors.cardDate ||
+            Errors.cardCvv
+        ) {
+            formRef.current?.setErrors(Errors);
+            return;
+        }
+
         console.log(data);
     };
 
@@ -27,7 +64,6 @@ const CardPayment: React.FC = () => {
                             <label htmlFor="cardNumber">Número do cartão</label>
                             <InputMask
                                 type="text"
-                                id="cardNumber"
                                 name="cardNumber"
                                 placeholder={'**** **** **** ****'}
                                 mask={{ mask: '0000 0000 0000 0000' }}
@@ -38,7 +74,6 @@ const CardPayment: React.FC = () => {
                             <label htmlFor="cardName">Nome do titular</label>
                             <InputMask
                                 type="text"
-                                id="cardName"
                                 name="cardName"
                                 placeholder={'Nome como está no cartão'}
                                 mask={{
@@ -60,10 +95,11 @@ const CardPayment: React.FC = () => {
                                 <label htmlFor="cardDate">Validade</label>
                                 <InputMask
                                     type="text"
-                                    id="cardDate"
                                     name="cardDate"
                                     placeholder={'mm/aa'}
-                                    mask={{ mask: '00/00' }}
+                                    mask={{
+                                        mask: '00/00',
+                                    }}
                                 />
                             </S.InputGroup>
 
@@ -73,50 +109,25 @@ const CardPayment: React.FC = () => {
                                 </label>
                                 <InputMask
                                     type="text"
-                                    id="cardCvv"
                                     name="cardCvv"
+                                    className="cardCvv"
                                     placeholder={'***'}
                                     mask={{ mask: '000' }}
+                                    onFocus={() => setShowBack(true)}
+                                    onBlur={() => setShowBack(false)}
                                 />
                             </S.InputGroup>
                         </S.WrapperSecurityCard>
                     </S.WrapperInputs>
 
                     <S.WrapperCard>
-                        {/* <S.FlipCard>
-                            <S.FlipCardInner>
-                                <S.FlipCardBack>
-                                    <img src={CardBack} alt="Card Back" />
-                                </S.FlipCardBack>
-                                <S.FlipCardFront>
-                                    <img src={CardFront} alt="Card Front" />
-                                </S.FlipCardFront>
-                            </S.FlipCardInner>
-                        </S.FlipCard> */}
-                        <S.CreditCard>
-                            <S.CardFront>
-                                <S.CardFrontTop>
-                                    <img src={VisaFlag} alt="Visa" />
-                                    <img src={Contactless} alt="Contactless" />
-                                </S.CardFrontTop>
-                                <S.CardFrontMiddle>
-                                    <S.CardFrontNumber>
-                                        <p>•••• •••• •••• ••••</p>
-                                    </S.CardFrontNumber>
-                                </S.CardFrontMiddle>
-                                <S.CardFrontBottom>
-                                    <S.CardFrontName>
-                                        Seu nome aqui
-                                    </S.CardFrontName>
-                                    <S.CardFrontDate>
-                                        <p>••</p>
-                                        <span>/</span>
-                                        <p>••</p>
-                                    </S.CardFrontDate>
-                                </S.CardFrontBottom>
-                            </S.CardFront>
-                            <S.CardBack></S.CardBack>
-                        </S.CreditCard>
+                        <CreditCard
+                            cardNumber={cardNumber}
+                            cardHolderName={cardName}
+                            cardValidity={cardValidity}
+                            cardCvv={cardCvv}
+                            showback={showBack}
+                        />
 
                         <S.Info>
                             <img src={Shield} alt="Shield" />
@@ -135,4 +146,4 @@ const CardPayment: React.FC = () => {
     );
 };
 
-export default CardPayment;
+export default AddCard;
